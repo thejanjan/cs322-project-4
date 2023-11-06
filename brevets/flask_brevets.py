@@ -51,14 +51,20 @@ def _calc_times():
     """
     app.logger.debug("Got a JSON request")
     km = request.args.get('km', 999, type=float)
+    start_time = request.args.get('start_time', '2021-01-01T00:00', type=str)
+    brevet_dist = request.args.get('brevet_dist', 200, type=float)
     app.logger.debug("km={}".format(km))
+    app.logger.debug("start_time={}".format(start_time))
+    app.logger.debug("brevet_dist={}".format(brevet_dist))
     app.logger.debug("request.args: {}".format(request.args))
-    # FIXME!
-    # Right now, only the current time is passed as the start time
-    # and control distance is fixed to 200
-    # You should get these from the webpage!
-    open_time = acp_times.open_time(km, 200, arrow.now().isoformat).format('YYYY-MM-DDTHH:mm')
-    close_time = acp_times.close_time(km, 200, arrow.now().isoformat).format('YYYY-MM-DDTHH:mm')
+
+    start_time_arrow = arrow.get(start_time)
+    try:
+        open_time = acp_times.open_time(km, brevet_dist, start_time_arrow).format('YYYY-MM-DDTHH:mm')
+        close_time = acp_times.close_time(km, brevet_dist, start_time_arrow).format('YYYY-MM-DDTHH:mm')
+    except AssertionError:
+        open_time = start_time_arrow.format('YYYY-MM-DDTHH:mm')
+        close_time = start_time_arrow.format('YYYY-MM-DDTHH:mm')
     result = {"open": open_time, "close": close_time}
     return flask.jsonify(result=result)
 
