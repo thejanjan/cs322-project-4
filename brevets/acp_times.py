@@ -64,7 +64,8 @@ def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
             duration += round((distance / speed) * 60) * 60
 
     # Return arrow object.
-    a = arrow.get(duration)
+    a = arrow.get(brevet_start_time)
+    a = a.shift(seconds=duration)
     a.replace(tzinfo=brevet_start_time.tzinfo)
     return a
 
@@ -108,6 +109,7 @@ def close_time(control_dist_km, brevet_dist_km, brevet_start_time):
                 duration += round((distance / speed) * 60) * 60
 
     # Return arrow object.
-    a = arrow.get(duration)
+    a = arrow.get(brevet_start_time)
+    a = a.shift(seconds=duration)
     a.replace(tzinfo=brevet_start_time.tzinfo)
     return a
