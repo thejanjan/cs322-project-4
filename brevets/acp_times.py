@@ -7,7 +7,7 @@ and https://rusa.org/pages/rulesForRiders
 import arrow
 
 
-def seconds(hour: int = 0, minute: int = 0, second: int = 0) -> int:
+def seconds(hour = 0, minute = 0, second = 0):
     """Returns the number of seconds given other time arguments."""
     return hour * 3600 + minute * 60 + second
 

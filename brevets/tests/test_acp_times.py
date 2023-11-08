@@ -4,7 +4,7 @@ Nose tests for acp_times.py
 Write your tests HERE AND ONLY HERE.
 """
 
-from brevets.acp_times import open_time, close_time, seconds
+import acp_times
 import arrow
 
 import nose    # Testing framework
@@ -12,6 +12,10 @@ import logging
 logging.basicConfig(format='%(levelname)s:%(message)s',
                     level=logging.WARNING)
 log = logging.getLogger(__name__)
+
+open_time = acp_times.open_time
+close_time = acp_times.close_time
+seconds = acp_times.seconds
 
 
 def test_opening_a():
