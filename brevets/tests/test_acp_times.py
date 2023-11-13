@@ -65,3 +65,11 @@ def test_closing_c():
     assert close_time(600,  1000, arrow.get(0)) == arrow.get(seconds(hour=40, minute=0))
     assert close_time(890,  1000, arrow.get(0)) == arrow.get(seconds(hour=65, minute=23))
     assert close_time(1000, 1000, arrow.get(0)) == arrow.get(seconds(hour=75, minute=0))
+
+
+def test_edge_cases():
+    # Provided by Ali Hassani
+    assert close_time(20, 400, arrow.get("2021-05-01T00:00")).format("YYYY-MM-DDTHH:mm") == \
+           arrow.get("2021-05-01T02:00").format("YYYY-MM-DDTHH:mm")
+    assert open_time(220, 400, arrow.get("2018-11-17T06:00")).format("YYYY-MM-DDTHH:mm") == \
+           arrow.get("2018-11-17T12:30").format("YYYY-MM-DDTHH:mm")
