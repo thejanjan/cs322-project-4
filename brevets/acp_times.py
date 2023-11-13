@@ -4,6 +4,8 @@ for ACP-sanctioned brevets
 following rules described at https://rusa.org/octime_acp.html
 and https://rusa.org/pages/rulesForRiders
 """
+import math
+
 import arrow
 
 
@@ -26,12 +28,14 @@ control_spans_to_speed_ranges = {
 # A mapping between brevet distance to overall time limits
 # (defined on https://rusa.org/pages/rulesForRiders).
 brevet_time_limits = {
-    200:  seconds(hour=13, minute=30),
-    300:  seconds(hour=20),
-    400:  seconds(hour=27),
-    600:  seconds(hour=40),
-    1000: seconds(hour=75),
+    200:  13.5,
+    300:  20,
+    400:  27,
+    600:  40,
+    1000: 75,
 }
+
+early_control_close_offset = (60, 20)
 
 
 def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
@@ -46,9 +50,6 @@ def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
        An arrow object indicating the control open time.
        This will be in the same time zone as the brevet start time.
     """
-    assert brevet_dist_km in brevet_time_limits, "Invalid distance specified"
-    assert control_dist_km <= brevet_dist_km, "Control distance exceeds brevet distance"
-
     # Iterate over each speed range.
     duration = 0
     for control_locations, control_speed_ranges in control_spans_to_speed_ranges.items():
@@ -61,11 +62,15 @@ def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
             # OK, then we add duration based on this control.
             control_end = min(control_end, control_dist_km)
             distance = control_end - control_start
-            duration += round((distance / speed) * 60) * 60
+            duration += distance / speed
+
+    # Round hours.
+    hours = math.floor(duration)
+    minutes = round((duration % 1) * 60)
 
     # Return arrow object.
     a = arrow.get(brevet_start_time)
-    a = a.shift(seconds=duration)
+    a = a.shift(hours=hours, minutes=minutes)
     a.replace(tzinfo=brevet_start_time.tzinfo)
     return a
 
@@ -82,16 +87,20 @@ def close_time(control_dist_km, brevet_dist_km, brevet_start_time):
        An arrow object indicating the control close time.
        This will be in the same time zone as the brevet start time.
     """
-    assert brevet_dist_km in brevet_time_limits, "Invalid distance specified"
-    assert control_dist_km <= brevet_dist_km, "Control distance exceeds brevet distance"
-
     # For the opening control, we always allot 1 hour to close
     if control_dist_km == 0:
-        duration = 3600
+        duration = 1
 
     # If we're closing at the end, use the overall brevet time limit
     elif control_dist_km == brevet_dist_km:
         duration = brevet_time_limits.get(brevet_dist_km)
+
+    # If we're closing near to the start, adjust time differently
+    elif control_dist_km < early_control_close_offset[0]:
+        # French variation -- when we are within the first 60km,
+        # we calculate rate at 20km/hr, plus one hour.
+        speed = early_control_close_offset[1]
+        duration = 1 + (control_dist_km / speed)
 
     else:
         # Iterate over each speed range.
@@ -106,10 +115,14 @@ def close_time(control_dist_km, brevet_dist_km, brevet_start_time):
                 # OK, then we add duration based on this control.
                 control_end = min(control_end, control_dist_km)
                 distance = control_end - control_start
-                duration += round((distance / speed) * 60) * 60
+                duration += distance / speed
+
+    # Round hours.
+    hours = math.floor(duration)
+    minutes = round((duration % 1) * 60)
 
     # Return arrow object.
     a = arrow.get(brevet_start_time)
-    a = a.shift(seconds=duration)
+    a = a.shift(hours=hours, minutes=minutes)
     a.replace(tzinfo=brevet_start_time.tzinfo)
     return a
